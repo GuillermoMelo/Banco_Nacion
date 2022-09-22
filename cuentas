@@ -1,0 +1,83 @@
+import random
+
+
+class Cuenta_bancaria:
+
+	def __init__ (self, un_titular,un_limite):
+		self.__nuevo_titular=un_titular
+		self.__nuevo_monto=0
+		self.__limite_extraccion=un_limite
+	
+	def get_limite_extraccion(self):
+		return self.__limite_extraccion
+
+	def saldo_disponible(self):
+		return self.__nuevo_monto
+
+	def titular(self):
+		return self.__nuevo_titular	
+
+	def modificar_titular(self,nombre):
+		self.__nuevo_titular=nombre
+
+	def depositar (self,deposito):
+		self.__nuevo_monto= self.__nuevo_monto+deposito
+		return True
+
+	def _extraer(self,un_monto):
+		self.__nuevo_monto-=un_monto
+
+	def transferir(self,transferencia, otra_cuenta):
+		if transferencia >0 and transferencia <= self.saldo_disponible() and self.saldo_disponible() >= 0:
+			self._extraer(transferencia)
+			otra_cuenta.depositar(transferencia*0.991)
+	
+	def autorizacion(self):
+		return random.choice([True,False])
+
+	def modificar_limite_extraccion(self):
+		if self.__nuevo_monto < self.get_limite_extraccion() or self.autorizacion ():
+			self.__limite_extraccion=self.__nuevo_monto
+			return True
+		else:
+			return False
+
+class Caja_ahorro(Cuenta_bancaria):
+
+	LIMITE_DEFECTO=30000
+	
+	def __init__ (self, un_titular):
+		super().__init__(un_titular,Caja_ahorro.LIMITE_DEFECTO)
+
+	def extraer (self,extraccion):
+		if extraccion <= self.get_limite_extraccion() and self.saldo_disponible() >=extraccion:
+			super()._extraer(extraccion)
+			return True
+		else:
+			return False
+		
+	def transferir(self, transferencia):
+		if transferencia <= self.saldo_disponible() and self.saldo_disponible()> 0:
+			super().transferir(transferencia)
+			return True
+		else:
+			return False
+
+class Cuenta_corriente(Cuenta_bancaria):
+	
+	DESCUBIERTO_DEFECTO=10000
+	LIMITE_DEFECTO=50000
+
+	def ampliacion_limite_descubierto(self):
+		if self.autorizacion():
+			return True
+		else:
+			return False
+	
+	def __init__ (self, un_titular):
+		super().__init__(un_titular,Cuenta_corriente.LIMITE_DEFECTO)
+		self.monto_al_descubierto=Cuenta_corriente.DESCUBIERTO_DEFECTO
+
+	def _extraer(self, extraccion):
+		if extraccion <= self.saldo_disponible() + self.monto_al_descubierto and extraccion <= self.LIMITE_DEFECTO:
+			super()._extraer(extraccion)
